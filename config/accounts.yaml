@@ -1,0 +1,34 @@
+accounts:
+  - account_id: "123456789012"
+    name: "Production"
+    role_name: "EC2RightsizingAnalyzerRole"
+    regions:
+      - us-east-1
+      - us-west-2
+  
+  - account_id: "987654321098"
+    name: "Development"
+    role_name: "EC2RightsizingAnalyzerRole"
+    regions:
+      - us-east-1
+
+settings:
+  metrics_lookback_days: 14
+  
+  thresholds:
+    cpu_high: 80
+    cpu_low: 20
+    memory_high: 80
+    memory_low: 20
+  
+  min_savings_threshold: 50
+  
+  allowed_families:
+    - m5
+    - m6i
+    - c5
+    - c6i
+    - r5
+    - r6i
+    - t3
+    - t4g
