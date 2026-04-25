@@ -1,0 +1,46 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  id-token: write
+  contents: read
+  security-events: write
+
+jobs:
+  security:
+    uses: Santosh-Alete/github-reusable-workflows/.github/workflows/sast-dast-scan.yml@main
+    with:
+      language: python
+      sast_enabled: true
+      dependency_scan: true
+      secret_scan: true
+
+  docker:
+    needs: [security]
+    uses: Santosh-Alete/github-reusable-workflows/.github/workflows/docker-build-scan-push.yml@main
+    with:
+      image_name: ${{ github.event.repository.name }}
+      registry: ${{ vars.ECR_REGISTRY }}
+      role_arn: ${{ vars.AWS_ROLE_ARN }}
+      scan_only: ${{ github.event_name == 'pull_request' }}
+
+  terraform:
+    needs: [security]
+    uses: Santosh-Alete/github-reusable-workflows/.github/workflows/terraform-plan-apply.yml@main
+    with:
+      working_directory: terraform
+      environment: dev
+      role_arn: ${{ vars.AWS_ROLE_ARN }}
+      checkov_enabled: true
+
+  tag-audit:
+    if: github.ref == 'refs/heads/main'
+    uses: Santosh-Alete/github-reusable-workflows/.github/workflows/aws-tag-compliance.yml@main
+    with:
+      role_arn: ${{ vars.AWS_READONLY_ROLE_ARN }}
+      enforce: false
